@@ -1,0 +1,6 @@
+{
+  "name": "ConceptMirror AI",
+  "description": "Intelligent adaptive learning platform that evaluates student reasoning, detects misconceptions, and maps knowledge.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
