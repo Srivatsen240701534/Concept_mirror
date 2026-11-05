@@ -1,5 +1,6 @@
 // src/components/views/SettingsView.tsx
-// Section 8 & 9: Settings, Local Storage, Live Curriculum Audit & In-Browser Self-Test Suite
+// ConceptMirror AI - Platform Settings, Curriculum Audit & In-Browser Automated Test Suite
+// Full dual-theme dark/light support, local JSON backup, and self-testing harness
 
 import React, { useState } from 'react';
 import {
@@ -46,14 +47,36 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   studyState,
   onUpdateStudyState,
 }) => {
-  const [importStatus, setImportStatus] = useState<{ success?: boolean; message?: string } | null>(null);
+  const [importStatus, setImportStatus] = useState<{ success?: boolean; message?: string } | null>(
+    null
+  );
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [testResults, setTestResults] = useState<TestResult[]>([
-    { name: '1. 75 Topics & 3 Difficulties Audit', status: 'pending', details: 'Verifies 5 subjects, 25 units, 75 topics with Beginner/Intermediate/Advanced content.' },
-    { name: '2. 750 MCQs Dataset Validation', status: 'pending', details: 'Verifies exactly 750 MCQs with 4 options, valid correct index, and explanations.' },
-    { name: '3. 50 Part B Questions 11-Mark Rubric Audit', status: 'pending', details: 'Verifies exactly 50 Part B questions with concept weights strictly summing to 11.' },
-    { name: '4. Rule-Based Evaluation Engine Sanity Check', status: 'pending', details: 'Verifies local keyword matching, phrase search, and rubric scoring without external APIs.' },
-    { name: '5. Browser LocalStorage Persistence Verification', status: 'pending', details: 'Tests read/write roundtrip to browser localStorage.' },
+    {
+      name: '1. 75 Topics & 3 Difficulties Audit',
+      status: 'pending',
+      details: 'Verifies 5 subjects, 25 units, 75 topics with Beginner/Intermediate/Advanced content.',
+    },
+    {
+      name: '2. 750 MCQs Dataset Validation',
+      status: 'pending',
+      details: 'Verifies exactly 750 MCQs with 4 options, valid correct index, and explanations.',
+    },
+    {
+      name: '3. 50 Part B Questions 11-Mark Rubric Audit',
+      status: 'pending',
+      details: 'Verifies exactly 50 Part B questions with concept weights strictly summing to 11.',
+    },
+    {
+      name: '4. Rule-Based Evaluation Engine Sanity Check',
+      status: 'pending',
+      details: 'Verifies local keyword matching, phrase search, and rubric scoring without external APIs.',
+    },
+    {
+      name: '5. Browser LocalStorage Persistence Verification',
+      status: 'pending',
+      details: 'Tests read/write roundtrip to browser localStorage.',
+    },
   ]);
   const [isRunningTests, setIsRunningTests] = useState(false);
 
@@ -146,7 +169,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     // Test 3: Part B 11-Mark Rubric check
     const t3Start = performance.now();
     try {
-      if (ALL_PART_B_QUESTIONS.length !== 50) throw new Error(`Expected 50 Part B questions, found ${ALL_PART_B_QUESTIONS.length}`);
+      if (ALL_PART_B_QUESTIONS.length !== 50)
+        throw new Error(`Expected 50 Part B questions, found ${ALL_PART_B_QUESTIONS.length}`);
       for (const pb of ALL_PART_B_QUESTIONS) {
         const sum = pb.expectedConcepts.reduce((acc, c) => acc + c.weight, 0);
         if (sum !== 11) throw new Error(`Question ${pb.id} rubric weight sum is ${sum}, must be 11`);
@@ -203,70 +227,86 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6 pb-20">
       {/* Header Banner */}
-      <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200/80 shadow-xs">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200 mb-2">
-          <Settings className="w-3.5 h-3.5 text-slate-600" />
-          <span>Section 8 & 9 · Platform Configuration & System Diagnostics</span>
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-xs transition-colors">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 mb-2">
+          <Settings className="w-3.5 h-3.5 text-slate-500" />
+          <span>System Diagnostics & Data Governance</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
           System Verification & Data Settings
         </h1>
-        <p className="text-sm text-slate-600 mt-1 max-w-2xl">
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-2xl leading-relaxed">
           Audit curriculum content integrity, run automated in-browser self-tests, and manage local data backups without cloud servers.
         </p>
       </div>
 
       {/* Content Coverage Report Card */}
-      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-          <div className="flex items-center gap-2 font-bold text-slate-900 text-sm uppercase tracking-wider">
-            <FileCheck className="w-4 h-4 text-emerald-600" />
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4 transition-colors">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider">
+            <FileCheck className="w-4 h-4 text-emerald-500" />
             <span>Content Coverage & Curriculum Audit</span>
           </div>
-          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+          <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50">
             100% Preloaded Offline
           </span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-center">
-          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80">
-            <span className="text-2xl font-black text-slate-900">{ALL_SUBJECTS.length}</span>
-            <span className="block text-xs font-semibold text-slate-500 mt-1">Subjects</span>
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800">
+            <span className="text-2xl font-black text-slate-900 dark:text-white tabular-nums">
+              {ALL_SUBJECTS.length}
+            </span>
+            <span className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">Subjects</span>
           </div>
-          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80">
-            <span className="text-2xl font-black text-slate-900">25</span>
-            <span className="block text-xs font-semibold text-slate-500 mt-1">Units (5/sub)</span>
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800">
+            <span className="text-2xl font-black text-slate-900 dark:text-white tabular-nums">25</span>
+            <span className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">Units (5/sub)</span>
           </div>
-          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80">
-            <span className="text-2xl font-black text-slate-900">{ALL_TOPICS.length}</span>
-            <span className="block text-xs font-semibold text-slate-500 mt-1">Topics (15/sub)</span>
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800">
+            <span className="text-2xl font-black text-slate-900 dark:text-white tabular-nums">
+              {ALL_TOPICS.length}
+            </span>
+            <span className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
+              Topics (15/sub)
+            </span>
           </div>
-          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80">
-            <span className="text-2xl font-black text-indigo-700">{ALL_MCQS.length}</span>
-            <span className="block text-xs font-semibold text-slate-500 mt-1">MCQs (10/topic)</span>
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800">
+            <span className="text-2xl font-black text-blue-600 dark:text-blue-400 tabular-nums">
+              {ALL_MCQS.length}
+            </span>
+            <span className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
+              MCQs (10/topic)
+            </span>
           </div>
-          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80">
-            <span className="text-2xl font-black text-violet-700">{ALL_PART_B_QUESTIONS.length}</span>
-            <span className="block text-xs font-semibold text-slate-500 mt-1">Part B (10/sub)</span>
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800">
+            <span className="text-2xl font-black text-violet-600 dark:text-violet-400 tabular-nums">
+              {ALL_PART_B_QUESTIONS.length}
+            </span>
+            <span className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
+              Part B (10/sub)
+            </span>
           </div>
-          <div className="p-3.5 rounded-xl bg-emerald-50/60 border border-emerald-200">
-            <span className="text-2xl font-black text-emerald-700">0</span>
-            <span className="block text-xs font-semibold text-emerald-800 mt-1">External APIs</span>
+          <div className="p-4 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50">
+            <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400 tabular-nums">0</span>
+            <span className="block text-xs font-semibold text-emerald-800 dark:text-emerald-300 mt-1">
+              External APIs
+            </span>
           </div>
         </div>
       </div>
 
       {/* Automated Self-Test Suite Runner */}
-      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4 transition-colors">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-100 dark:border-slate-800">
           <div>
-            <div className="flex items-center gap-2 font-bold text-slate-900 text-sm uppercase tracking-wider">
-              <Cpu className="w-4 h-4 text-indigo-600" />
+            <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider">
+              <Cpu className="w-4 h-4 text-blue-500" />
               <span>Automated In-Browser Self-Test Suite</span>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               Execute real-time assertions on curriculum completeness, MCQ options, Part B rubric weights, and evaluation algorithms.
             </p>
           </div>
@@ -274,10 +314,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <button
             onClick={runSelfTestSuite}
             disabled={isRunningTests}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-xs ${
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer ${
               isRunningTests
-                ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                : 'bg-indigo-600 text-white hover:bg-indigo-700 cursor-pointer'
+                ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+                : 'bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-600/30'
             }`}
           >
             {isRunningTests ? (
@@ -298,26 +338,30 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           {testResults.map((t, idx) => (
             <div
               key={idx}
-              className={`p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs transition-colors ${
+              className={`p-4 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs transition-colors ${
                 t.status === 'passed'
-                  ? 'bg-emerald-50/40 border-emerald-200 text-emerald-950'
+                  ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/50 text-emerald-950 dark:text-emerald-200'
                   : t.status === 'failed'
-                  ? 'bg-rose-50/40 border-rose-200 text-rose-950'
-                  : 'bg-slate-50 border-slate-200 text-slate-700'
+                  ? 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800/50 text-rose-950 dark:text-rose-200'
+                  : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'
               }`}
             >
               <div className="space-y-0.5">
-                <div className="font-bold flex items-center gap-2 text-slate-900">
-                  {t.status === 'passed' && <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />}
-                  {t.status === 'failed' && <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />}
-                  {t.status === 'pending' && <span className="w-2 h-2 rounded-full bg-slate-300 ml-1 mr-1" />}
+                <div className="font-bold flex items-center gap-2 text-slate-900 dark:text-white">
+                  {t.status === 'passed' && <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />}
+                  {t.status === 'failed' && <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />}
+                  {t.status === 'pending' && (
+                    <span className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600 ml-1 mr-1" />
+                  )}
                   <span>{t.name}</span>
                 </div>
-                <p className="text-slate-500 text-[11px] pl-6">{t.details}</p>
+                <p className="text-slate-500 dark:text-slate-400 text-[11px] pl-6 leading-relaxed">
+                  {t.details}
+                </p>
               </div>
 
               {t.durationMs !== undefined && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-600 self-end sm:self-center shrink-0">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 self-end sm:self-center shrink-0 tabular-nums">
                   {t.durationMs}ms
                 </span>
               )}
@@ -329,49 +373,44 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {/* Backup, Restore & Reset Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Data Backup & Restore */}
-        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-4">
-          <div className="font-bold text-slate-900 text-sm uppercase tracking-wider flex items-center gap-2 pb-3 border-b border-slate-100">
-            <Database className="w-4 h-4 text-indigo-600" />
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4 transition-colors">
+          <div className="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
+            <Database className="w-4 h-4 text-blue-500" />
             <span>Backup & Restore Progress</span>
           </div>
 
-          <p className="text-xs text-slate-600 leading-relaxed">
+          <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
             Your notes, bookmarks, MCQ test history, and Part B scores are saved locally in your browser. You can export a clean JSON file to backup or transfer between computers.
           </p>
 
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <button
               onClick={handleExportJson}
-              className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors flex items-center gap-1.5 cursor-pointer"
+              className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center gap-1.5 cursor-pointer"
             >
-              <Download className="w-3.5 h-3.5 text-slate-600" />
+              <Download className="w-3.5 h-3.5 text-slate-500" />
               <span>Export JSON Backup</span>
             </button>
 
-            <label className="px-4 py-2.5 rounded-xl text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-colors flex items-center gap-1.5 cursor-pointer">
-              <Upload className="w-3.5 h-3.5 text-indigo-600" />
+            <label className="px-4 py-2.5 rounded-xl text-xs font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800/60 transition-colors flex items-center gap-1.5 cursor-pointer">
+              <Upload className="w-3.5 h-3.5 text-blue-500" />
               <span>Import JSON File</span>
-              <input
-                type="file"
-                accept=".json"
-                onChange={handleImportJson}
-                className="hidden"
-              />
+              <input type="file" accept=".json" onChange={handleImportJson} className="hidden" />
             </label>
           </div>
 
           {importStatus && (
             <div
-              className={`p-3 rounded-xl text-xs font-medium flex items-center gap-2 ${
+              className={`p-3 rounded-2xl text-xs font-medium flex items-center gap-2 ${
                 importStatus.success
-                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                  : 'bg-rose-50 text-rose-800 border border-rose-200'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50'
+                  : 'bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800/50'
               }`}
             >
               {importStatus.success ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
               ) : (
-                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
               )}
               <span>{importStatus.message}</span>
             </div>
@@ -379,13 +418,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
 
         {/* Clear All Data */}
-        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-4">
-          <div className="font-bold text-rose-700 text-sm uppercase tracking-wider flex items-center gap-2 pb-3 border-b border-slate-100">
-            <Trash2 className="w-4 h-4 text-rose-600" />
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4 transition-colors">
+          <div className="font-bold text-rose-600 dark:text-rose-400 text-xs uppercase tracking-wider flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
+            <Trash2 className="w-4 h-4 text-rose-500" />
             <span>Reset Student Progress</span>
           </div>
 
-          <p className="text-xs text-slate-600 leading-relaxed">
+          <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
             Erase all completed topics, test scores, bookmarks, and understanding metrics from this browser. The preloaded curriculum, MCQs, and Part B questions will remain intact.
           </p>
 
@@ -393,26 +432,26 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             {!showResetConfirm ? (
               <button
                 onClick={() => setShowResetConfirm(true)}
-                className="px-4 py-2.5 rounded-xl text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors flex items-center gap-1.5 cursor-pointer"
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200 dark:border-rose-800/50 transition-colors flex items-center gap-1.5 cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Reset All Local Study Data</span>
               </button>
             ) : (
-              <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 space-y-3">
-                <span className="text-xs font-bold text-rose-900 block">
+              <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 space-y-3">
+                <span className="text-xs font-bold text-rose-900 dark:text-rose-200 block">
                   Are you absolutely sure? This action cannot be undone.
                 </span>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleConfirmReset}
-                    className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-white bg-rose-600 hover:bg-rose-700"
+                    className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 cursor-pointer shadow-xs"
                   >
                     Yes, Erase Everything
                   </button>
                   <button
                     onClick={() => setShowResetConfirm(false)}
-                    className="px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200"
+                    className="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 cursor-pointer"
                   >
                     Cancel
                   </button>

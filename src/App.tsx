@@ -1,6 +1,7 @@
 // src/App.tsx
 // ConceptMirror AI - Complete 100% Offline Educational Platform
 // 5 Subjects, 25 Units, 75 Topics (3 Difficulties), 750 MCQs, 50 Part B Questions (11 Marks)
+// Featuring "MY LEARNING UNIVERSE" 3D Progress Model & Dual Dark/Light Theme Architecture
 
 import React, { useState, useEffect } from 'react';
 import { Navbar, NavTabId } from './components/layout/Navbar';
@@ -31,6 +32,25 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<NavTabId>('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [studyState, setStudyState] = useState<UserStudyState>(() => loadUserStudyState());
+
+  // Dark/Light Theme state (Dark is the polished primary theme)
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    const saved = localStorage.getItem('conceptmirror_theme');
+    return saved === 'light' ? 'light' : 'dark';
+  });
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('conceptmirror_theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
 
   // Current active topic for LearnView
   const [currentTopic, setCurrentTopic] = useState<Topic>(() => {
@@ -124,7 +144,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans antialiased selection:bg-indigo-500/20 selection:text-indigo-900">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans antialiased selection:bg-indigo-500/20 selection:text-indigo-400 transition-colors">
       {/* Top Navigation Bar */}
       <Navbar
         activeTab={activeTab}
@@ -134,6 +154,8 @@ export default function App() {
         onSelectTopic={handleSelectTopicToLearn}
         onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
         isMobileOpen={isMobileMenuOpen}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
 
       <div className="flex-1 flex max-w-7xl w-full mx-auto">
