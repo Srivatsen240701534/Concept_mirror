@@ -1,6 +1,5 @@
 {
   "name": "ConceptMirror AI",
-  "description": "Intelligent adaptive learning platform that evaluates student reasoning, detects misconceptions, and maps knowledge.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "description": "Offline educational platform with 5 subjects, 25 units, 75 topics, 750 MCQs, and 11-mark rule-based Part B answer evaluation.",
+  "requestFramePermissions": []
 }

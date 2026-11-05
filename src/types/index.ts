@@ -1,245 +1,209 @@
-export type DifficultyLevel = 'Beginner' | 'Intermediate' | 'Advanced';
-export type ExplanationStyle = 'Simple' | 'Detailed' | 'Example-based';
-export type QuestionType = 'Conceptual' | 'Application-based' | 'Mixed';
-export type QuestionFormat = 'multiple_choice' | 'short_answer' | 'explain_reasoning' | 'scenario';
-export type EvaluationVerdict = 'correct' | 'partially_correct' | 'incorrect' | 'misconception_detected';
-export type MasteryLevel = 'Mastered' | 'Developing' | 'Needs Revision' | 'Not Yet Tested';
+// ConceptMirror AI - Complete Offline Educational Platform Type Definitions
 
-export interface Concept {
-  id: string;
+export type SubjectId = 'cn' | 'ai' | 'toc' | 'mc' | 'gk';
+export type DifficultyLevel = 'beginner' | 'intermediate' | 'advanced';
+
+export interface SubjectMetadata {
+  id: SubjectId;
+  code: string;
   name: string;
-  description: string;
-  prerequisites?: string[];
-  masteryLevel: MasteryLevel;
-  masteryScore: number; // 0 to 100
-  timesTested: number;
-  lastTestedDate?: string;
-  notes?: string;
+  shortName: string;
+  tagline: string;
+  iconName: string;
+  accentColor: string;
+  unitsCount: 5;
+  topicsCount: 15;
+  mcqCount: 150;
+  partBCount: 10;
 }
 
-export interface LearningTopic {
-  id: string;
+export interface UnitMetadata {
+  id: string; // e.g. "cn-u1"
+  subjectId: SubjectId;
+  unitNumber: number; // 1 to 5
   title: string;
-  subject: string;
-  difficulty: DifficultyLevel;
-  style: ExplanationStyle;
-  prerequisites: string[];
+  description: string;
+  topicIds: string[];
+}
+
+export interface TopicContent {
   summary: string;
-  concepts: {
-    id: string;
-    title: string;
-    explanation: string;
-    practicalExample: string;
-    relationships: string[];
-  }[];
-  analogies: string[];
-  createdAt: string;
-  isDemo?: boolean;
+  theory: string;
+  definitions: Array<{ term: string; definition: string }>;
+  keyConcepts: Array<{ title: string; explanation: string; example: string }>;
+  diagram?: string; // Text / ASCII architecture diagram
+  applications: string[];
+  examImportantPoints: string[];
+  quickRevisionNotes: string[];
 }
 
-export interface ExamQuestion {
-  id: string;
-  questionNumber?: number;
-  conceptTargeted: string;
-  questionType?: QuestionFormat;
-  difficulty: DifficultyLevel;
-  questionText?: string;
-  question?: string;
-  topic?: string;
-  subject?: string;
-  contextScenario?: string;
-  options?: string[]; // for multiple choice
-  correctAnswerSummary?: string; // used for evaluation on server
-  idealAnswer?: string;
-  evaluationCriteria?: string[];
-  adaptiveReason?: string; // why this question was selected
-  hints?: string[];
-  rubric?: {
-    accuracy: number;
-    depth: number;
-    clarity: number;
-  };
-  // Sample demonstration evaluation responses for offline demo mode
-  demoSampleAnswerCorrect?: string;
-  demoSampleAnswerPartial?: string;
-  demoSampleAnswerMisconception?: string;
-  demoFeedbackCorrect?: string;
-  demoFeedbackPartial?: string;
-  demoFeedbackMisconception?: string;
+export interface Topic {
+  id: string; // e.g. "cn-u1-t1"
+  subjectId: SubjectId;
+  unitId: string;
+  unitNumber: number;
+  unitTitle: string;
+  topicNumber: number; // 1 to 3
+  title: string;
+  objectives: string[];
+  keywords: string[];
+  content: Record<DifficultyLevel, TopicContent>;
 }
 
-export interface AnswerEvaluation {
-  verdict: EvaluationVerdict;
-  score: number; // 0 to 100
-  reasoningAnalysis: {
-    soundReasoning: string[];
-    gapsOrFlaws: string[];
-  };
-  detectedMisconception?: {
-    conceptName: string;
-    studentMentalModel: string;
-    scientificCorrection: string;
-    concreteAnalogy: string;
-    followUpPrompt: string;
-  };
-  confidenceScore: number; // 0 to 100
-  constructiveFeedback: string;
-  correctExplanation: string;
-  practicalExample: string;
-  adaptiveNextStep: string;
-}
-
-export interface StudentAnswer {
-  questionId: string;
-  studentResponse: string;
-  reasoningText?: string;
-  submittedAt: string;
-  evaluation: AnswerEvaluation;
-}
-
-export interface ExamSession {
-  id: string;
+// MCQ Types
+export interface MCQuestion {
+  id: string; // e.g. "mcq-cn-u1-t1-1"
+  subjectId: SubjectId;
+  unitId: string;
+  topicId: string;
   topicTitle: string;
-  subject: string;
   difficulty: DifficultyLevel;
-  questionTypeCategory: QuestionType;
-  totalQuestionsPlanned: number;
-  currentQuestionIndex: number;
-  questions: ExamQuestion[];
-  answers: StudentAnswer[];
-  startedAt: string;
-  completedAt?: string;
-  isCompleted: boolean;
-  isDemo?: boolean;
-  mode?: 'live' | 'demo';
-  sessionSummary?: {
-    overallScore: number;
-    masteredConcepts: string[];
-    developingConcepts: string[];
-    revisionNeededConcepts: string[];
-    misconceptionsIdentified: number;
-    strengths: string[];
-    keyRecommendations: string[];
-  };
+  question: string;
+  options: [string, string, string, string];
+  correctIndex: 0 | 1 | 2 | 3;
+  explanation: string;
+  referenceExamPoint?: string;
 }
 
-export interface Misconception {
+export interface MCQTestAttempt {
   id: string;
-  topicTitle: string;
-  conceptName: string;
-  subject: string;
-  detectedDate: string;
-  studentReasoning: string;
-  whyIncorrect: string;
-  correctExplanation: string;
-  simpleAnalogy: string;
-  verificationChallenge: {
-    question: string;
-    options: string[];
-    correctIndex: number;
-    explanation: string;
-  };
-  isResolved: boolean;
-  resolvedDate?: string;
-  sessionId?: string;
-  isDemo?: boolean;
+  timestamp: string;
+  title: string;
+  mode: 'topic' | 'unit' | 'subject' | 'random';
+  subjectId?: SubjectId;
+  unitId?: string;
+  topicId?: string;
+  totalQuestions: number;
+  score: number;
+  accuracy: number;
+  timeSpentSeconds: number;
+  userAnswers: Array<{
+    questionId: string;
+    topicId: string;
+    topicTitle: string;
+    selectedOption: number;
+    correctOption: number;
+    isCorrect: boolean;
+  }>;
+  topicsNeedingRevision: string[];
 }
 
-export interface MasteryRecord {
+// Part B — 11-Mark Question Types
+export interface RubricCriterion {
   conceptId: string;
   conceptName: string;
-  subject: string;
-  topicTitle: string;
-  level: MasteryLevel;
-  score: number; // 0-100
-  lastTested: string;
-  answersCount: number;
-  correctCount: number;
-  isDemo?: boolean;
+  maxMarks: number;
+  fullMarksCriteria: string;
+  partialMarksCriteria: string;
 }
 
-export interface RevisionTask {
+export interface ExpectedConcept {
   id: string;
+  name: string;
+  weight: number; // Must sum up to 11 across the question
+  description: string;
+  requiredKeywords: string[];
+  synonyms: Record<string, string[]>;
+  keyPhrases: string[];
+}
+
+export interface PartBQuestion {
+  id: string; // e.g. "pb-cn-1"
+  subjectId: SubjectId;
+  unitId: string;
+  topicId: string;
   topicTitle: string;
+  question: string;
+  maxMarks: 11;
+  expectedConcepts: ExpectedConcept[];
+  markingRubric: {
+    criteria: RubricCriterion[];
+    totalMarks: 11;
+  };
+  modelAnswer: string;
+  examTips: string[];
+}
+
+export interface ConceptEvaluation {
+  conceptId: string;
   conceptName: string;
-  subject: string;
-  reasonForRevision: string;
-  recommendedActivity: string;
-  estimatedMinutes: number;
-  priority: 'High' | 'Medium' | 'Low';
-  scheduledDate: string;
-  isCompleted: boolean;
-  completedAt?: string;
-  isDemo?: boolean;
+  weight: number;
+  awardedMarks: number;
+  status: 'covered' | 'partial' | 'missing';
+  matchedKeywords: string[];
+  missingKeywords: string[];
+  feedback: string;
 }
 
-export interface UserPreferences {
-  aiMode: 'live' | 'demo';
-  defaultSubject: string;
-  defaultDifficulty: DifficultyLevel;
-  defaultQuestionCount: number;
-  defaultExplanationStyle: ExplanationStyle;
-  soundEnabled: boolean;
-}
-
-export interface LearningHistory {
-  sessions: ExamSession[];
-  topicsStudied: LearningTopic[];
-  misconceptions: Misconception[];
-  masteryMap: Record<string, MasteryRecord>;
-  revisionTasks: RevisionTask[];
-  preferences: UserPreferences;
-}
-
-export interface DemoDataset {
+export interface PartBEvaluationResult {
   id: string;
-  subject: string;
-  topic?: string;
-  title?: string;
-  category?: string;
-  domain?: string;
-  difficulty: DifficultyLevel;
-  description?: string;
-  summary?: string;
-  tags?: string[];
-  learningObjectives?: string[];
-  structuredExplanation?: LearningTopic;
-  explanation?: {
-    topic: string;
-    subject: string;
-    summary: string;
-    keyConcepts: {
-      name: string;
-      explanation: string;
-      importance: string;
-    }[];
-    prerequisites: string[];
-    misconceptions: string[];
-    learningObjectives: string[];
-  };
-  questions: ExamQuestion[];
-  sampleAnswers?: {
-    questionId: string;
-    studentAnswer: string;
-    verdict: EvaluationVerdict;
-    score: number;
-    confidenceScore?: number;
-    feedback: string;
-  }[];
-  misconceptions?: (Misconception | string)[];
-  conceptMastery?: {
-    conceptName: string;
-    level: MasteryLevel;
-    score: number;
-  }[];
-  suggestedRevisionTasks?: RevisionTask[];
-  sampleResult?: {
-    overallScore: number;
-    masteredConcepts: string[];
-    developingConcepts: string[];
-    revisionNeededConcepts: string[];
-    misconceptionsIdentified: number;
-    strengths: string[];
-    keyRecommendations: string[];
-  };
+  questionId: string;
+  subjectId: SubjectId;
+  topicId: string;
+  topicTitle: string;
+  questionText: string;
+  studentAnswer: string;
+  wordCount: number;
+  timeTakenSeconds: number;
+  submittedAt: string;
+  totalScore: number; // out of 11
+  percentage: number;
+  completenessScore: number; // 0 - 100%
+  conceptEvaluations: ConceptEvaluation[];
+  overallFeedback: string;
+  improvementSuggestions: string[];
+  modelAnswer: string;
+  disclaimer: string;
+}
+
+// Understanding Analysis Types
+export type UnderstandingCategory =
+  | 'Strong Understanding'
+  | 'Good Understanding'
+  | 'Developing Understanding'
+  | 'Needs Improvement'
+  | 'Not Yet Evaluated';
+
+export interface TopicUnderstandingMetric {
+  topicId: string;
+  topicTitle: string;
+  subjectId: SubjectId;
+  unitId: string;
+  mcqAttemptsCount: number;
+  mcqAverageAccuracy: number; // 0 to 100
+  partBSubmissionsCount: number;
+  partBAverageMarks: number; // out of 11
+  partBConceptCoverage: number; // 0 to 100
+  consistencyScore: number; // 0 to 100
+  responseFluencyScore: number; // 0 to 100
+  compositeScore: number; // 0 to 100
+  isProvisional: boolean;
+  category: UnderstandingCategory;
+  lastEvaluatedAt?: string;
+  recommendation: string;
+}
+
+export interface SubjectUnderstandingSummary {
+  subjectId: SubjectId;
+  subjectName: string;
+  evaluatedTopicsCount: number;
+  totalTopicsCount: number;
+  overallScore: number;
+  category: UnderstandingCategory;
+  strongTopicsCount: number;
+  goodTopicsCount: number;
+  developingTopicsCount: number;
+  needsImprovementCount: number;
+  revisionRecommendedTopicIds: string[];
+}
+
+// Storage State
+export interface UserStudyState {
+  completedTopics: Record<string, { completedAt: string; difficulty: DifficultyLevel }>;
+  bookmarkedTopics: string[];
+  mcqAttempts: MCQTestAttempt[];
+  partBSubmissions: PartBEvaluationResult[];
+  topicStudyTimeSeconds: Record<string, number>;
+  totalStudyTimeSeconds: number;
+  lastActiveTopic: { subjectId: SubjectId; unitId: string; topicId: string } | null;
 }

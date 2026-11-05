@@ -1,137 +1,103 @@
-# ConceptMirror AI
+# ConceptMirror AI — 100% Offline Educational Platform
 
 > **"Understand what you know. Discover what you don’t."**
 
-**ConceptMirror AI** is an intelligent, full-stack adaptive educational platform designed to determine how well students *actually* understand concepts.
+**ConceptMirror AI** is a complete, lightweight, 100% offline educational web application engineered for undergraduate curriculum mastery.
 
-Unlike traditional quiz applications that only score binary multiple-choice answers, ConceptMirror AI captures and evaluates the student's underlying reasoning, diagnoses flawed mental schemas (misconceptions), dynamically adapts subsequent questions to test boundary conditions, and renders an interactive **3D Knowledge Constellation (Three.js)** reflecting verified comprehension.
-
----
-
-## 1. Key Innovations & Features
-
-### 🧠 1. Cognitive Reasoning Analysis (Flagship Feature)
-- Collects students' explanations of *why* they chose their answer.
-- Distinguishes lucky guesses from true foundational comprehension.
-- Grades on an evidence-based scale: `Correct`, `Partially Correct`, `Incorrect`, or `Misconception Detected`.
-
-### 🔍 2. Inferred Misconception Detector
-- Identifies inverted mental models (e.g. confusing exponential Slow Start with linear Congestion Avoidance in TCP).
-- Clarifies the flawed mental model vs. scientific reality with intuitive physical analogies.
-- Provides interactive **Quick Recalibration Challenges** to verify that the mental model is corrected.
-
-### 🌌 3. Interactive 3D Knowledge Neural Mirror (Three.js WebGL)
-- Features a procedural multi-part Cognitive Core with PBR materials, `ACESFilmicToneMapping`, studio lighting, and zero external asset dependencies.
-- Orbiting concept satellite nodes color-coded by verified mastery:
-  - 🟢 **Mastered** (&ge;80% index)
-  - 🔵 **Developing** (50% – 79%)
-  - 🟠 **Needs Revision** (&lt;50%)
-- Interactive raycasting: click any node to focus the camera, inspect past evaluation transcripts, and trigger immediate targeted practice.
-- Includes a 2D topological graph toggle and collapsible bottom control dock.
-
-### 🎯 4. Truly Adaptive Examination Engine
-- Generates questions one at a time.
-- If a student exhibits conceptual confusion, the examiner shifts toward a simpler diagnostic question.
-- If a student demonstrates mastery, the examiner escalates to complex edge-case scenarios.
-
-### 📅 5. Smart Spaced Revision Planner
-- Calculates priority revision schedules based on error recency and memory retention decay.
-- Micro-study sessions with quick reschedule options (+2 days).
-
-### 📊 6. Longitudinal History & Presentation Exports
-- Full transcript inspection: review every prompt, student answer, and AI breakdown.
-- Export all learning history to **CSV**.
-- Print-ready and **PDF** export styling for college faculty presentations.
-
-### 🛡️ 7. Deterministic DEMO MODE (Zero API Key Barrier)
-- Fully functional offline demonstration pre-loaded with **TCP Congestion Control**.
-- Complete with structured explanations, 5 sequential adaptive questions, partial credit examples, misconception resolution challenges, and sample 3D knowledge map.
-- Clearly labeled `DEMO DATA` vs `LIVE AI MODE`.
+It bundles all educational content locally and requires **zero external API keys, zero cloud databases, and zero external AI models**. All evaluations are performed by an in-browser heuristic and rule-based assessment engine.
 
 ---
 
-## 2. Technology Stack
+## 1. Curriculum Coverage
 
-- **Frontend:**
-  - React 19 + TypeScript
-  - Tailwind CSS v4
-  - Lucide React Icons
-  - Recharts for data analytics & performance tracking
-- **3D Graphics:**
-  - Three.js (r160+) with `RoomEnvironment`, `PMREMGenerator`, PBR Shaders, and exponential camera damping
-- **Backend & Server-side AI:**
-  - Node.js Express server (`server.ts`)
-  - Google GenAI SDK (`@google/genai`) using model `gemini-3.8-flash`
-  - Structured JSON validation schema
-- **Persistence & Storage:**
-  - Browser `localStorage` with defensive data recovery and instant seed/reset utilities
+The application includes exactly **5 subjects**, with **5 units per subject** and **3 topics per unit** (**total: 25 units and 75 topics**):
 
----
-
-## 3. How to Run Locally
-
-### Prerequisites
-- Node.js (v18 or higher recommended)
-- npm or pnpm
-
-### Steps
-
-1. Clone or extract the repository:
-   ```bash
-   git clone <repo-url>
-   cd conceptmirror-ai
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Run the development server:
-   ```bash
-   npm run dev
-   ```
-
-4. Open your browser and navigate to:
-   ```
-   http://localhost:3000
-   ```
+1. **Computer Networks (CN)**
+   - Unit 1: Network Fundamentals & Physical Layer
+   - Unit 2: Data Link Layer & Medium Access Control
+   - Unit 3: Network Layer & Internet Routing
+   - Unit 4: Transport Layer & Reliability Protocols
+   - Unit 5: Application Layer & Network Security
+2. **Fundamentals of AI (AI)**
+   - Unit 1: Foundations, Agents & State-Space Search
+   - Unit 2: Adversarial Search & Games
+   - Unit 3: Knowledge Representation & Logical Inference
+   - Unit 4: Probabilistic Reasoning & Uncertainty
+   - Unit 5: Machine Learning Foundations & Ethical AI
+3. **Theory of Computation (TOC)**
+   - Unit 1: Automata Theory & Regular Languages
+   - Unit 2: Context-Free Languages & Pushdown Automata
+   - Unit 3: Turing Machines & Computability Theory
+   - Unit 4: Decidability & Undecidability
+   - Unit 5: Computational Complexity Theory
+4. **Mobile Computing (MC)**
+   - Unit 1: Wireless Communications & Cellular Foundations
+   - Unit 2: Medium Access Control & Wireless MAC Protocols
+   - Unit 3: Mobile IP & Wireless Routing
+   - Unit 4: Mobile Transport & Application Protocols
+   - Unit 5: Mobile Security, IoT & Edge Computing
+5. **General Knowledge (GK)**
+   - Unit 1: World Geography & Environmental Systems
+   - Unit 2: Modern History & Global Treaties
+   - Unit 3: Constitution, Polity & Governance
+   - Unit 4: Macroeconomics, Trade & Fiscal Policy
+   - Unit 5: Science, Technology & Space Exploration
 
 ---
 
-## 4. How to Use DEMO MODE vs LIVE AI MODE
+## 2. Key Modules & Features
 
-- **DEMO MODE:**
-  - Enabled by default if no Gemini API key is configured.
-  - Can be toggled at any time using the **LIVE / DEMO** button in the top navigation bar.
-  - Requires zero internet connection, zero API keys, and zero configuration.
-  - Provides a complete, verified simulation of the TCP Congestion Control examination.
+### 📖 1. Three-Tier Learning Section (75 Topics)
+- Every topic supports **Beginner**, **Intermediate**, and **Advanced** difficulty modes.
+- Includes comprehensive theory, formal definitions, key concepts with examples, text/ASCII architecture diagrams, real-world applications, exam important points, and quick revision notes.
+- Complete/uncomplete topic tracking and bookmarking.
 
-- **LIVE AI MODE:**
-  - Inside Google AI Studio, the Gemini integration is configured automatically.
-  - To run Live AI mode outside AI Studio, create a `.env` file in the root directory:
-    ```env
-    GEMINI_API_KEY="your-google-gemini-api-key"
-    PORT=3000
-    ```
-  - Restart the application (`npm run dev`). The server will automatically detect the key and activate Live AI mode with model `gemini-3.8-flash`.
+### 📝 2. MCQ Practice (750 Questions)
+- Exactly **10 distinct MCQs per topic** (150 per subject, 750 total).
+- Each question includes 4 options, verified correct index, detailed pedagogical explanations, and difficulty ratings.
+- Modes supported: Topic-wise, Unit-wise, Subject-wise, Random, Timed (with countdown timer), and Untimed.
+- Detailed score breakdown, accuracy %, correct/incorrect review, time spent, and automatic flagging of revision topics.
+
+### ✍️ 3. Part B — 11-Mark Answer Analyser (50 Questions)
+- **10 Part B questions per subject** (50 total), each carrying a maximum of **11 marks**.
+- Evaluated locally by a rule-based engine performing text normalization, stemming, synonym matching, phrase detection, and negation checks.
+- Concept rubrics with weights strictly summing to **11.0 marks**.
+- Color-coded concept breakdown:
+  - 🟢 **Covered Concepts** (Full rubric marks)
+  - 🟡 **Partially Covered Concepts** (With matched & missing keywords)
+  - 🔴 **Missing Concepts** (With required technical principles)
+- Answer completeness %, word count, elapsed timer, specific improvement suggestions, and reference model answer revealed strictly post-submission.
+- Formative offline evaluation disclaimer.
+
+### 🎯 4. Student Understanding Analysis Engine
+- Calculates transparent understanding score using the formula:
+  - **30% MCQ Accuracy**
+  - **30% Part B Concept Coverage**
+  - **25% Part B Marks**
+  - **10% Consistency**
+  - **5% Response Fluency (Pacing)**
+- Classification: *Strong Understanding*, *Good Understanding*, *Developing Understanding*, *Needs Improvement*, and *Not Yet Evaluated*.
+- Clear *Provisional* badge when topic has partial test data.
+
+### 🔄 5. Revision & Bookmarks
+- Automatically compiles priority revision lists based on MCQ mistakes and low composite understanding scores.
+- Pinned bookmarks list for quick access.
+
+### 📊 6. Performance History
+- Audit log of all completed MCQ tests and Part B submissions.
+- Detail modals to inspect answers, times, and rubric evaluations.
+
+### ⚙️ 7. System Verification & Self-Test Suite
+- **Content Coverage Report**: Live verification audit of all 5 subjects, 25 units, 75 topics, 750 MCQs, and 50 Part B questions.
+- **Automated In-Browser Self-Test Runner**: Real-time assertions on curriculum integrity, rubric weight sums (= 11), evaluation engine sanity, and LocalStorage persistence.
+- **Backup & Restore**: Export/import study progress via clean JSON files.
+- **Reset**: Safe data clear with confirmation modal.
 
 ---
 
-## 5. College Faculty Demonstration Walkthrough
+## 3. Tech Stack
 
-When presenting this project to faculty or examiners:
-
-1. **Overview Dashboard:** Show the live-calculated metrics (Topics Studied, Concepts Mastered, Needs Revision, Performance Progression).
-2. **Launch AI Examiner:** Select **TCP Congestion Control** (or enter a custom topic).
-3. **Simulate a Misconception:** On Question 2, answer that *"Slow Start increases window size slowly by 1 packet per RTT"*.
-4. **Inspect Diagnostic Output:** Observe how ConceptMirror catches the inverted mental model, isolates the flawed reasoning, and adapts Question 3.
-5. **Explore the 3D Constellation:** Navigate to **Knowledge Map**, rotate the 3D neural core, and click on nodes to review past answers.
-6. **Solve the Verification Challenge:** Go to **Misconception Analysis** and answer the recalibration challenge to demonstrate resolution.
-7. **Export Report:** Click **Print Report** or **Export CSV** to demonstrate academic compliance and reporting.
-
----
-
-## License
-
-Apache-2.0 License. Built for presentation-grade academic demonstration.
+- **Frontend**: React 19, TypeScript, Vite, Tailwind CSS v4, Lucide React.
+- **Architecture**: Single Page Application (SPA) with 100% bundled local datasets.
+- **Backend / Dev Server**: Node.js, Express, tsx.
+- **Port**: 3000 (`http://localhost:3000`).
