@@ -16,22 +16,27 @@ import { RevisionView } from './components/views/RevisionView';
 import { PerformanceHistoryView } from './components/views/PerformanceHistoryView';
 import { SettingsView } from './components/views/SettingsView';
 
-import { DifficultyLevel, MCQTestAttempt, SubjectId, Topic, UserStudyState } from './types';
+import { DifficultyLevel, MCQTestAttempt, SubjectId, Topic, UserProfile, UserStudyState } from './types';
 import { ALL_TOPICS, getTopicById } from './data/curriculum/topics';
 import {
+  loadUserProfile,
   loadUserStudyState,
   markTopicCompleted,
   recordStudyTime,
   saveMcqAttempt,
+  saveUserProfile,
   saveUserStudyState,
   toggleTopicBookmark,
 } from './services/storage';
 import { calculateAllUnderstanding } from './services/understandingEngine';
+import { LoginModal } from './components/auth/LoginModal';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<NavTabId>('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [studyState, setStudyState] = useState<UserStudyState>(() => loadUserStudyState());
+  const [userProfile, setUserProfile] = useState<UserProfile>(() => loadUserProfile());
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   // Dark/Light Theme state (Dark is the polished primary theme)
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -143,6 +148,27 @@ export default function App() {
     setStudyState({ ...updated });
   };
 
+  const handleUpdateUser = (updated: UserProfile) => {
+    setUserProfile(updated);
+    saveUserProfile(updated);
+  };
+
+  const handleLogout = () => {
+    const guestProfile: UserProfile = {
+      id: 'usr_guest',
+      name: 'Guest Student',
+      email: 'guest@conceptmirror.local',
+      rollNumber: 'GUEST-LEARNER',
+      department: 'General Engineering Studies',
+      institution: 'Independent Learner',
+      semester: 'Self-Paced Study',
+      avatarColor: '#64748b',
+      isLoggedIn: false,
+    };
+    setUserProfile(guestProfile);
+    saveUserProfile(guestProfile);
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans antialiased selection:bg-indigo-500/20 selection:text-indigo-400 transition-colors">
       {/* Top Navigation Bar */}
@@ -156,6 +182,8 @@ export default function App() {
         isMobileOpen={isMobileMenuOpen}
         theme={theme}
         onToggleTheme={toggleTheme}
+        currentUser={userProfile}
+        onOpenLoginModal={() => setIsLoginModalOpen(true)}
       />
 
       <div className="flex-1 flex max-w-7xl w-full mx-auto">
@@ -179,6 +207,8 @@ export default function App() {
               overallCategory={understandingMetrics.overallCategory}
               onNavigate={handleNavigate}
               onSelectTopicToLearn={handleSelectTopicToLearn}
+              currentUser={userProfile}
+              onOpenLoginModal={() => setIsLoginModalOpen(true)}
             />
           )}
 
@@ -278,6 +308,15 @@ export default function App() {
           )}
         </main>
       </div>
+
+      {/* Student Authentication & Profile Modal */}
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        currentUser={userProfile}
+        onUpdateUser={handleUpdateUser}
+        onLogout={handleLogout}
+      />
     </div>
   );
 }

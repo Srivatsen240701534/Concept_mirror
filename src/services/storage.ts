@@ -165,3 +165,36 @@ export function resetAllStorageData(): UserStudyState {
   }
   return DEFAULT_STATE;
 }
+
+const USER_PROFILE_STORAGE_KEY = 'conceptmirror_user_profile_v1';
+
+export const DEFAULT_USER_PROFILE = {
+  id: 'usr_srivatsen_2024',
+  name: 'Srivatsen S',
+  email: 'srivatsen.s.2024.cse@rajalakshmi.edu.in',
+  rollNumber: '2024-CSE-01534',
+  department: 'Computer Science & Engineering',
+  institution: 'Rajalakshmi Engineering College',
+  semester: 'Semester 4 / B.E.',
+  avatarColor: '#3b82f6',
+  isLoggedIn: true,
+};
+
+export function loadUserProfile(): typeof DEFAULT_USER_PROFILE {
+  try {
+    const raw = localStorage.getItem(USER_PROFILE_STORAGE_KEY);
+    if (!raw) return DEFAULT_USER_PROFILE;
+    return { ...DEFAULT_USER_PROFILE, ...JSON.parse(raw) };
+  } catch (err) {
+    console.error('Failed to parse user profile:', err);
+    return DEFAULT_USER_PROFILE;
+  }
+}
+
+export function saveUserProfile(profile: typeof DEFAULT_USER_PROFILE): void {
+  try {
+    localStorage.setItem(USER_PROFILE_STORAGE_KEY, JSON.stringify(profile));
+  } catch (err) {
+    console.error('Failed to save user profile:', err);
+  }
+}

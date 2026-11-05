@@ -1,5 +1,5 @@
 // src/components/universe/LearningUniverse3D.tsx
-// MY LEARNING UNIVERSE - Interactive 3D Student Progress Visualization
+// MY LEARNING UNIVERSE - Interactive 3D Student Progress Visualization (ZenMap)
 // 5 Subjects, 75 Topics, 25 Units mapped dynamically to a rotatable holographic constellation
 
 import React, { useEffect, useRef, useState, useMemo } from 'react';
@@ -11,6 +11,7 @@ import {
   Play,
   Pause,
   Maximize2,
+  Minimize2,
   ChevronDown,
   ChevronUp,
   Sparkles,
@@ -21,6 +22,8 @@ import {
   Award,
   AlertTriangle,
   Info,
+  Compass,
+  Palette,
 } from 'lucide-react';
 import {
   SubjectId,
@@ -51,49 +54,57 @@ const SUBJECT_SECTOR_CONFIG: Record<
     hexColor: string;
     threeColor: number;
     glowColor: number;
+    ringTilt: number;
   }
 > = {
   cn: {
     angle: (0 * 2 * Math.PI) / 5,
-    elevation: 0.15,
-    radius: 9.5,
+    elevation: 0.12,
+    radius: 9.6,
     hexColor: '#3b82f6', // Electric Blue
     threeColor: 0x3b82f6,
     glowColor: 0x60a5fa,
+    ringTilt: 0.35,
   },
   ai: {
     angle: (1 * 2 * Math.PI) / 5,
-    elevation: 0.28,
-    radius: 10.0,
+    elevation: 0.25,
+    radius: 10.2,
     hexColor: '#8b5cf6', // Soft Violet
     threeColor: 0x8b5cf6,
     glowColor: 0xa78bfa,
+    ringTilt: -0.4,
   },
   toc: {
     angle: (2 * 2 * Math.PI) / 5,
     elevation: -0.15,
-    radius: 9.2,
+    radius: 9.4,
     hexColor: '#06b6d4', // Cyan / Sky
     threeColor: 0x06b6d4,
     glowColor: 0x22d3ee,
+    ringTilt: 0.5,
   },
   mc: {
     angle: (3 * 2 * Math.PI) / 5,
-    elevation: -0.25,
-    radius: 9.8,
+    elevation: -0.22,
+    radius: 9.9,
     hexColor: '#10b981', // Emerald Teal
     threeColor: 0x10b981,
     glowColor: 0x34d399,
+    ringTilt: -0.3,
   },
   gk: {
     angle: (4 * 2 * Math.PI) / 5,
-    elevation: 0.05,
-    radius: 9.0,
+    elevation: 0.08,
+    radius: 9.2,
     hexColor: '#f59e0b', // Radiant Amber
     threeColor: 0xf59e0b,
     glowColor: 0xfbbf24,
+    ringTilt: 0.25,
   },
 };
+
+type AtmosphereTheme = 'cosmic' | 'aurora' | 'solaris';
 
 export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
   studyState,
@@ -107,6 +118,8 @@ export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
   const [hoveredSubject, setHoveredSubject] = useState<{ id: SubjectId; name: string; progress: number } | null>(null);
   const [autoRotate, setAutoRotate] = useState<boolean>(true);
   const [controlsCollapsed, setControlsCollapsed] = useState<boolean>(false);
+  const [isZenExpanded, setIsZenExpanded] = useState<boolean>(false);
+  const [atmosphere, setAtmosphere] = useState<AtmosphereTheme>('cosmic');
   const [webGlSupported, setWebGlSupported] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -158,6 +171,31 @@ export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
     };
   }, [subjectTopics, topicMetrics]);
 
+  // Smooth camera glide to focus on a subject
+  const handleFocusSubject = (subId: SubjectId) => {
+    setSelectedSubjectId(subId);
+    const config = SUBJECT_SECTOR_CONFIG[subId];
+    // Rotate camera to directly face this subject sector
+    targetRotationRef.current = {
+      x: Math.max(-0.4, Math.min(0.4, config.elevation * 0.8)),
+      y: -config.angle + Math.PI / 2,
+    };
+    targetDistanceRef.current = 20;
+  };
+
+  // Reset Camera View handler
+  const handleResetCamera = () => {
+    targetRotationRef.current = { x: 0.35, y: 0 };
+    targetDistanceRef.current = 24;
+  };
+
+  const handleZoom = (direction: 'in' | 'out') => {
+    targetDistanceRef.current =
+      direction === 'in'
+        ? Math.max(14, targetDistanceRef.current - 4)
+        : Math.min(34, targetDistanceRef.current + 4);
+  };
+
   // Three.js Scene Setup & Loop
   useEffect(() => {
     const container = mountRef.current;
@@ -178,7 +216,10 @@ export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
     // 1. Scene
     const scene = new THREE.Scene();
     sceneRef.current = scene;
-    scene.fog = new THREE.FogExp2(0x090d16, 0.02);
+    scene.fog = new THREE.FogExp2(
+      atmosphere === 'aurora' ? 0x051318 : atmosphere === 'solaris' ? 0x140e08 : 0x070b14,
+      0.018
+    );
 
     // 2. Camera
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
@@ -196,10 +237,9 @@ export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
+    renderer.toneMappingExposure = 1.25;
     rendererRef.current = renderer;
 
-    // Ensure clean container and append canvas
     while (container.firstChild) {
       container.removeChild(container.firstChild);
     }
@@ -211,19 +251,23 @@ export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
     setIsLoading(false);
 
     // 4. Lighting Rig
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
     scene.add(ambientLight);
 
-    const coreLight = new THREE.PointLight(0x818cf8, 3, 40);
+    const coreLight = new THREE.PointLight(
+      atmosphere === 'aurora' ? 0x34d399 : atmosphere === 'solaris' ? 0xfbbf24 : 0x818cf8,
+      3.2,
+      45
+    );
     coreLight.position.set(0, 0, 0);
     scene.add(coreLight);
 
-    const rimLight = new THREE.DirectionalLight(0x38bdf8, 1.2);
-    rimLight.position.set(15, 20, 15);
+    const rimLight = new THREE.DirectionalLight(0x38bdf8, 1.3);
+    rimLight.position.set(15, 22, 15);
     scene.add(rimLight);
 
-    const secondaryRim = new THREE.DirectionalLight(0xc084fc, 0.8);
-    secondaryRim.position.set(-15, -10, -10);
+    const secondaryRim = new THREE.DirectionalLight(0xc084fc, 0.9);
+    secondaryRim.position.set(-15, -12, -10);
     scene.add(secondaryRim);
 
     // 5. Build Universe Structure
@@ -231,25 +275,24 @@ export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
     universeGroupRef.current = universeGroup;
     scene.add(universeGroup);
 
-    // Center Knowledge Core (Holographic Planet)
+    // Center Knowledge Core (Holographic Quantum Planet)
     const coreGroup = new THREE.Group();
     universeGroup.add(coreGroup);
 
-    // Inner glowing sphere
-    const coreGeo = new THREE.SphereGeometry(2.4, 32, 32);
+    // Inner glowing core sphere
+    const coreGeo = new THREE.SphereGeometry(2.35, 32, 32);
     const coreMat = new THREE.MeshStandardMaterial({
       color: 0x1e1b4b,
-      emissive: 0x4338ca,
-      emissiveIntensity: 0.8,
+      emissive: 0x4f46e5,
+      emissiveIntensity: 0.85,
       roughness: 0.2,
       metalness: 0.8,
-      wireframe: false,
     });
     const coreMesh = new THREE.Mesh(coreGeo, coreMat);
     coreGroup.add(coreMesh);
 
-    // Geodesic hologram wireframe lattice
-    const latticeGeo = new THREE.IcosahedronGeometry(2.9, 2);
+    // Geodesic hologram wireframe lattice (outer icosahedron)
+    const latticeGeo = new THREE.IcosahedronGeometry(2.95, 2);
     const latticeMat = new THREE.MeshBasicMaterial({
       color: 0x818cf8,
       wireframe: true,
@@ -259,24 +302,41 @@ export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
     const latticeMesh = new THREE.Mesh(latticeGeo, latticeMat);
     coreGroup.add(latticeMesh);
 
-    // Orbiting equatorial rings
+    // Counter-rotating inner sacred geometry octahedron
+    const octaGeo = new THREE.OctahedronGeometry(2.0, 0);
+    const octaMat = new THREE.MeshBasicMaterial({
+      color: 0x22d3ee,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.45,
+    });
+    const octaMesh = new THREE.Mesh(octaGeo, octaMat);
+    coreGroup.add(octaMesh);
+
+    // 3 Gyroscopic Equatorial & Polar Gimbal Rings
     const ringGeo1 = new THREE.TorusGeometry(3.6, 0.04, 16, 100);
-    const ringMat1 = new THREE.MeshBasicMaterial({ color: 0x6366f1, transparent: true, opacity: 0.5 });
+    const ringMat1 = new THREE.MeshBasicMaterial({ color: 0x6366f1, transparent: true, opacity: 0.55 });
     const ring1 = new THREE.Mesh(ringGeo1, ringMat1);
     ring1.rotation.x = Math.PI / 3;
     coreGroup.add(ring1);
 
-    const ringGeo2 = new THREE.TorusGeometry(4.2, 0.03, 16, 100);
-    const ringMat2 = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.4 });
+    const ringGeo2 = new THREE.TorusGeometry(4.2, 0.035, 16, 100);
+    const ringMat2 = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.45 });
     const ring2 = new THREE.Mesh(ringGeo2, ringMat2);
     ring2.rotation.x = -Math.PI / 4;
     ring2.rotation.y = Math.PI / 6;
     coreGroup.add(ring2);
 
-    // Ambient Starfield / Particle Cloud
-    const particleCount = 450;
-    const particlePositions = new Float32Array(particleCount * 3);
-    const particleColors = new Float32Array(particleCount * 3);
+    const ringGeo3 = new THREE.TorusGeometry(4.7, 0.03, 16, 100);
+    const ringMat3 = new THREE.MeshBasicMaterial({ color: 0xc084fc, transparent: true, opacity: 0.35 });
+    const ring3 = new THREE.Mesh(ringGeo3, ringMat3);
+    ring3.rotation.z = Math.PI / 2;
+    coreGroup.add(ring3);
+
+    // Ambient Multi-Tier Starfield / Particle Cloud
+    const starCount = 420;
+    const starPositions = new Float32Array(starCount * 3);
+    const starColors = new Float32Array(starCount * 3);
     const palette = [
       new THREE.Color(0x3b82f6),
       new THREE.Color(0x8b5cf6),
@@ -286,36 +346,54 @@ export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
       new THREE.Color(0xffffff),
     ];
 
-    for (let i = 0; i < particleCount; i++) {
-      const r = 4.5 + Math.random() * 16;
+    for (let i = 0; i < starCount; i++) {
+      const r = 4.5 + Math.random() * 18;
       const theta = Math.random() * Math.PI * 2;
-      const phi = (Math.random() - 0.5) * Math.PI * 0.8;
+      const phi = (Math.random() - 0.5) * Math.PI * 0.85;
 
-      particlePositions[i * 3] = r * Math.cos(phi) * Math.cos(theta);
-      particlePositions[i * 3 + 1] = r * Math.sin(phi);
-      particlePositions[i * 3 + 2] = r * Math.cos(phi) * Math.sin(theta);
+      starPositions[i * 3] = r * Math.cos(phi) * Math.cos(theta);
+      starPositions[i * 3 + 1] = r * Math.sin(phi);
+      starPositions[i * 3 + 2] = r * Math.cos(phi) * Math.sin(theta);
 
       const col = palette[Math.floor(Math.random() * palette.length)];
-      particleColors[i * 3] = col.r;
-      particleColors[i * 3 + 1] = col.g;
-      particleColors[i * 3 + 2] = col.b;
+      starColors[i * 3] = col.r;
+      starColors[i * 3 + 1] = col.g;
+      starColors[i * 3 + 2] = col.b;
     }
 
-    const particleGeo = new THREE.BufferGeometry();
-    particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
-    particleGeo.setAttribute('color', new THREE.BufferAttribute(particleColors, 3));
-    const particleMat = new THREE.PointsMaterial({
+    const starGeo = new THREE.BufferGeometry();
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+    starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
+    const starMat = new THREE.PointsMaterial({
       size: 0.16,
       vertexColors: true,
       transparent: true,
       opacity: 0.75,
     });
-    const particleSystem = new THREE.Points(particleGeo, particleMat);
-    universeGroup.add(particleSystem);
+    const starSystem = new THREE.Points(starGeo, starMat);
+    universeGroup.add(starSystem);
 
     // Clickable map for raycasting
     const clickMap = new Map<THREE.Object3D, SubjectId>();
     clickableObjectsRef.current = clickMap;
+
+    // Moving energy pulse packets along the 5 constellation beams
+    const beamPulseMeshes: Array<{
+      mesh: THREE.Mesh;
+      start: THREE.Vector3;
+      end: THREE.Vector3;
+      speed: number;
+    }> = [];
+
+    // Animated orbiting satellites collection (completed topic moons)
+    const topicSatelliteList: Array<{
+      mesh: THREE.Mesh;
+      center: THREE.Vector3;
+      radius: number;
+      speed: number;
+      initialAngle: number;
+      tiltY: number;
+    }> = [];
 
     // 6. Build 5 Subject Constellations / Sector Clusters
     ALL_SUBJECTS.forEach((subject) => {
@@ -331,27 +409,44 @@ export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
       const posX = config.radius * Math.cos(config.angle);
       const posZ = config.radius * Math.sin(config.angle);
       const posY = config.radius * config.elevation;
-      sectorGroup.position.set(posX, posY, posZ);
+      const sectorPos = new THREE.Vector3(posX, posY, posZ);
+      sectorGroup.position.copy(sectorPos);
       universeGroup.add(sectorGroup);
 
       // Connecting energy beam from central core to subject hub
-      const beamPoints = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(posX, posY, posZ)];
+      const beamPoints = [new THREE.Vector3(0, 0, 0), sectorPos];
       const beamGeo = new THREE.BufferGeometry().setFromPoints(beamPoints);
       const beamMat = new THREE.LineBasicMaterial({
         color: config.glowColor,
         transparent: true,
-        opacity: 0.25 + progressRatio * 0.45,
+        opacity: 0.3 + progressRatio * 0.45,
       });
       const beamLine = new THREE.Line(beamGeo, beamMat);
       universeGroup.add(beamLine);
 
+      // Energy pulse packet moving along beam
+      const pulseGeo = new THREE.SphereGeometry(0.18, 12, 12);
+      const pulseMat = new THREE.MeshBasicMaterial({
+        color: config.glowColor,
+        transparent: true,
+        opacity: 0.85,
+      });
+      const pulseMesh = new THREE.Mesh(pulseGeo, pulseMat);
+      universeGroup.add(pulseMesh);
+      beamPulseMeshes.push({
+        mesh: pulseMesh,
+        start: new THREE.Vector3(0, 0, 0),
+        end: sectorPos.clone(),
+        speed: 0.35 + Math.random() * 0.15,
+      });
+
       // Subject Planetary Hub (Central Beacon)
-      const hubSize = 1.05 + progressRatio * 0.45;
-      const hubGeo = new THREE.SphereGeometry(hubSize, 24, 24);
+      const hubSize = 1.1 + progressRatio * 0.45;
+      const hubGeo = new THREE.SphereGeometry(hubSize, 28, 28);
       const hubMat = new THREE.MeshStandardMaterial({
         color: config.threeColor,
         emissive: config.glowColor,
-        emissiveIntensity: 0.6 + progressRatio * 0.6,
+        emissiveIntensity: 0.65 + progressRatio * 0.55,
         roughness: 0.3,
         metalness: 0.6,
       });
@@ -360,21 +455,23 @@ export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
       sectorGroup.add(hubMesh);
       clickMap.set(hubMesh, subject.id);
 
-      // Outer Halo Ring (scales with subject mastery / progress)
-      const haloRadius = hubSize + 0.65;
-      const haloGeo = new THREE.TorusGeometry(haloRadius, 0.05, 12, 48);
-      const haloMat = new THREE.MeshBasicMaterial({
+      // Saturn-like Planetary Disc Ring around subject
+      const discInner = hubSize + 0.35;
+      const discOuter = hubSize + 0.85;
+      const discGeo = new THREE.RingGeometry(discInner, discOuter, 32);
+      const discMat = new THREE.MeshBasicMaterial({
         color: config.glowColor,
+        side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.4 + progressRatio * 0.5,
+        opacity: 0.38 + progressRatio * 0.42,
       });
-      const haloMesh = new THREE.Mesh(haloGeo, haloMat);
-      haloMesh.rotation.x = Math.PI / 2;
-      sectorGroup.add(haloMesh);
+      const discMesh = new THREE.Mesh(discGeo, discMat);
+      discMesh.rotation.x = Math.PI / 2 + config.ringTilt;
+      sectorGroup.add(discMesh);
 
-      // Progress Arc / Segment (Partial Torus representing completed topics out of 15)
+      // Progress Segment Arc (Partial Torus representing completed topics)
       const arcAngle = Math.max(0.2, progressRatio * Math.PI * 2);
-      const arcGeo = new THREE.TorusGeometry(hubSize + 0.9, 0.08, 12, 48, arcAngle);
+      const arcGeo = new THREE.TorusGeometry(hubSize + 1.05, 0.07, 12, 48, arcAngle);
       const arcMat = new THREE.MeshBasicMaterial({
         color: 0xffffff,
         transparent: true,
@@ -384,7 +481,7 @@ export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
       arcMesh.rotation.x = Math.PI / 2;
       sectorGroup.add(arcMesh);
 
-      // Orbiting Topic Nodes (15 topics per subject arranged in satellite mini-orbits)
+      // 15 Topic Nodes & Orbiting Moonlets
       subTopics.forEach((topic, idx) => {
         const isDone = Boolean(studyState.completedTopics[topic.id]);
         const metric = topicMetrics[topic.id];
@@ -393,13 +490,9 @@ export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
           (metric.category === 'Needs Improvement' ||
             (metric.category === 'Developing Understanding' && metric.compositeScore < 60));
 
-        // Distribute 15 topics in 2 concentric sub-orbits around the hub
-        const subOrbitRadius = idx < 8 ? 2.1 : 2.8;
+        // Concentric sub-orbits around the hub
+        const subOrbitRadius = idx < 8 ? 2.15 : 2.9;
         const subAngle = (idx * 2 * Math.PI) / (idx < 8 ? 8 : 7);
-
-        const nodeX = subOrbitRadius * Math.cos(subAngle);
-        const nodeZ = subOrbitRadius * Math.sin(subAngle);
-        const nodeY = ((idx % 3) - 1) * 0.45;
 
         const nodeRadius = isDone ? 0.22 : 0.12;
         const nodeGeo = new THREE.SphereGeometry(nodeRadius, 12, 12);
@@ -411,7 +504,7 @@ export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
         if (isDone) {
           nodeColor = config.glowColor;
           nodeEmissive = 0xffffff;
-          nodeEmissiveIntensity = 0.9;
+          nodeEmissiveIntensity = 0.95;
         } else if (needsRevision) {
           nodeColor = 0xf43f5e; // Alert rose
           nodeEmissive = 0xff0055;
@@ -422,30 +515,33 @@ export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
           color: nodeColor,
           emissive: nodeEmissive,
           emissiveIntensity: nodeEmissiveIntensity,
-          roughness: 0.4,
-          metalness: 0.5,
+          roughness: 0.35,
+          metalness: 0.6,
         });
 
         const nodeMesh = new THREE.Mesh(nodeGeo, nodeMat);
-        nodeMesh.position.set(nodeX, nodeY, nodeZ);
-        sectorGroup.add(nodeMesh);
 
-        // Subtle connecting filament to hub
         if (isDone) {
-          const filamentPoints = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(nodeX, nodeY, nodeZ)];
-          const filamentGeo = new THREE.BufferGeometry().setFromPoints(filamentPoints);
-          const filamentMat = new THREE.LineBasicMaterial({
-            color: config.glowColor,
-            transparent: true,
-            opacity: 0.35,
+          // Energetic Moonlet: Dynamically orbits in 3D around the subject hub
+          sectorGroup.add(nodeMesh);
+          topicSatelliteList.push({
+            mesh: nodeMesh,
+            center: new THREE.Vector3(0, 0, 0),
+            radius: subOrbitRadius,
+            speed: (0.4 + (idx % 4) * 0.15) * (idx % 2 === 0 ? 1 : -1),
+            initialAngle: subAngle,
+            tiltY: ((idx % 3) - 1) * 0.3,
           });
-          const filamentLine = new THREE.Line(filamentGeo, filamentMat);
-          sectorGroup.add(filamentLine);
+        } else {
+          // Static constellation node
+          const nodeX = subOrbitRadius * Math.cos(subAngle);
+          const nodeZ = subOrbitRadius * Math.sin(subAngle);
+          const nodeY = ((idx % 3) - 1) * 0.4;
+          nodeMesh.position.set(nodeX, nodeY, nodeZ);
+          sectorGroup.add(nodeMesh);
         }
       });
     });
-
-    setIsLoading(false);
 
     // 7. Raycaster for hover & click detection
     const raycaster = new THREE.Raycaster();
@@ -474,15 +570,16 @@ export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
         const hitObj = intersects[0].object;
         const subId = clickMap.get(hitObj);
         if (subId) {
-          const s = getSubjectById(subId);
+          const sub = getSubjectById(subId);
           const done = ALL_TOPICS.filter((t) => t.subjectId === subId && studyState.completedTopics[t.id]).length;
-          setHoveredSubject({ id: subId, name: s.name, progress: Math.round((done / 15) * 100) });
+          const pct = Math.round((done / 15) * 100);
+          setHoveredSubject({ id: subId, name: sub.name, progress: pct });
           renderer.domElement.style.cursor = 'pointer';
           return;
         }
       }
       setHoveredSubject(null);
-      renderer.domElement.style.cursor = 'grab';
+      renderer.domElement.style.cursor = isDraggingRef.current ? 'grabbing' : 'grab';
     };
 
     const handleClick = (e: MouseEvent) => {
@@ -497,7 +594,7 @@ export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
         const hitObj = intersects[0].object;
         const subId = clickMap.get(hitObj);
         if (subId) {
-          setSelectedSubjectId(subId);
+          handleFocusSubject(subId);
         }
       }
     };
@@ -507,6 +604,7 @@ export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
     domEl.addEventListener('click', handleClick);
 
     // 8. Pointer / Touch Drag & Momentum Handling
+    // REVERSED: Moving mouse left rotates object clockwise, moving mouse right rotates anticlockwise!
     const onPointerDown = (e: MouseEvent | TouchEvent) => {
       isDraggingRef.current = true;
       domEl.style.cursor = 'grabbing';
@@ -523,10 +621,13 @@ export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
       const deltaX = (clientX - prevPointerRef.current.x) * 0.006;
       const deltaY = (clientY - prevPointerRef.current.y) * 0.006;
 
-      targetRotationRef.current.y += deltaX;
+      // REVERSED HORIZONTAL ROTATION DIRECTION:
+      // Moving mouse left (deltaX < 0) => targetRotation.y -= deltaX increases angle (rotates clockwise)
+      // Moving mouse right (deltaX > 0) => targetRotation.y -= deltaX decreases angle (rotates anticlockwise)
+      targetRotationRef.current.y -= deltaX;
       targetRotationRef.current.x = Math.max(-0.8, Math.min(0.8, targetRotationRef.current.x + deltaY));
 
-      rotationVelocityRef.current = { x: deltaY, y: deltaX };
+      rotationVelocityRef.current = { x: deltaY, y: -deltaX };
       prevPointerRef.current = { x: clientX, y: clientY };
     };
 
@@ -551,8 +652,7 @@ export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
 
     // Double-click to reset view
     const onDblClick = () => {
-      targetRotationRef.current = { x: 0.35, y: 0 };
-      targetDistanceRef.current = 24;
+      handleResetCamera();
     };
     domEl.addEventListener('dblclick', onDblClick);
 
@@ -576,10 +676,11 @@ export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
     const animate = (currentTime: number) => {
       const delta = Math.min((currentTime - lastTime) / 1000, 0.1);
       lastTime = currentTime;
+      const elapsedTimeSec = currentTime * 0.001;
 
       // Idle auto-rotation when not dragging
       if (autoRotate && !isDraggingRef.current) {
-        targetRotationRef.current.y += 0.003;
+        targetRotationRef.current.y += 0.0025;
       }
 
       // Smooth exponential damping on rotation & zoom
@@ -600,8 +701,28 @@ export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
       // Pulsing and spinning core elements
       coreGroup.rotation.y += delta * 0.2;
       latticeMesh.rotation.x -= delta * 0.15;
+      octaMesh.rotation.y -= delta * 0.3;
       ring1.rotation.z += delta * 0.25;
-      ring2.rotation.z += delta * 0.3;
+      ring2.rotation.z -= delta * 0.3;
+      ring3.rotation.y += delta * 0.2;
+
+      // Dynamic breathing core glow
+      coreMat.emissiveIntensity = 0.75 + Math.sin(elapsedTimeSec * 2.5) * 0.25;
+
+      // Orbit completed topic satellites around their subject hubs
+      topicSatelliteList.forEach((sat) => {
+        const currentAngle = sat.initialAngle + elapsedTimeSec * sat.speed;
+        sat.mesh.position.x = sat.center.x + sat.radius * Math.cos(currentAngle);
+        sat.mesh.position.z = sat.center.z + sat.radius * Math.sin(currentAngle);
+        sat.mesh.position.y = sat.center.y + Math.sin(currentAngle * 2) * sat.tiltY;
+      });
+
+      // Animate energy pulses flowing along constellation beams
+      beamPulseMeshes.forEach((pulse) => {
+        const cycle = (elapsedTimeSec * pulse.speed) % 1.0;
+        pulse.mesh.position.lerpVectors(pulse.start, pulse.end, cycle);
+        pulse.mesh.scale.setScalar(0.7 + Math.sin(cycle * Math.PI) * 0.6);
+      });
 
       renderer.render(scene, camera);
       animFrameIdRef.current = requestAnimationFrame(animate);
@@ -627,37 +748,45 @@ export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
         domEl.parentNode.removeChild(domEl);
       }
       renderer.dispose();
-      particleGeo.dispose();
+      starGeo.dispose();
       coreGeo.dispose();
       latticeGeo.dispose();
+      octaGeo.dispose();
     };
-  }, [studyState, subjectSummaries, topicMetrics, autoRotate]);
-
-  // Reset Camera View handler
-  const handleResetCamera = () => {
-    targetRotationRef.current = { x: 0.35, y: 0 };
-    targetDistanceRef.current = 24;
-  };
-
-  const handleZoom = (direction: 'in' | 'out') => {
-    targetDistanceRef.current =
-      direction === 'in'
-        ? Math.max(14, targetDistanceRef.current - 4)
-        : Math.min(34, targetDistanceRef.current + 4);
-  };
+  }, [studyState, subjectSummaries, topicMetrics, autoRotate, atmosphere]);
 
   return (
     <div className="space-y-6">
       {/* 3D Universe Viewport Container */}
-      <div className="relative rounded-3xl overflow-hidden border border-slate-800 bg-gradient-to-b from-[#0b0f19] via-[#090d16] to-[#0d121f] shadow-2xl">
-        {/* Ambient Top Glow Accents */}
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute top-10 right-1/4 w-96 h-96 bg-violet-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div
+        className={`relative rounded-3xl overflow-hidden border border-slate-800 bg-gradient-to-b from-[#0b0f19] via-[#090d16] to-[#0d121f] shadow-2xl transition-all duration-500 ${
+          isZenExpanded ? 'ring-2 ring-indigo-500/30' : ''
+        }`}
+      >
+        {/* Ambient Top Glow Accents based on atmosphere theme */}
+        <div
+          className={`absolute top-0 left-1/4 w-96 h-96 rounded-full blur-3xl pointer-events-none transition-colors duration-700 ${
+            atmosphere === 'aurora'
+              ? 'bg-emerald-500/10'
+              : atmosphere === 'solaris'
+              ? 'bg-amber-500/10'
+              : 'bg-blue-500/10'
+          }`}
+        />
+        <div
+          className={`absolute top-10 right-1/4 w-96 h-96 rounded-full blur-3xl pointer-events-none transition-colors duration-700 ${
+            atmosphere === 'aurora'
+              ? 'bg-cyan-500/10'
+              : atmosphere === 'solaris'
+              ? 'bg-orange-500/10'
+              : 'bg-violet-500/10'
+          }`}
+        />
 
         {/* Header Ribbon within 3D Viewport */}
         <div className="relative z-10 px-6 pt-6 pb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pointer-events-auto">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-300">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-300 shadow-lg">
               <Sparkles className="w-5 h-5 text-indigo-400" />
             </div>
             <div>
@@ -666,42 +795,74 @@ export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
                   My Learning Universe
                 </h2>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30">
-                  Interactive 3D
+                  3D ZenMap
+                </span>
+                {/* Subtle Zen focus breathing indicator */}
+                <span className="hidden md:inline-flex items-center gap-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-900/80 text-slate-300 border border-slate-700">
+                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                  Zen Focus
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                Real-time spatial visualization of your curriculum progress across 5 subjects & 75 topics.
+                Drag to rotate clockwise/anticlockwise &bull; Scroll to zoom &bull; Click any subject beacon to focus
               </p>
             </div>
           </div>
 
-          {/* Quick Stats in Top Right */}
+          {/* Top Right Atmosphere & Mode Toggles */}
           <div className="flex items-center gap-2 self-start sm:self-auto text-xs">
-            <div className="px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800 backdrop-blur-md text-slate-300 flex items-center gap-2">
-              <span className="text-slate-400">Completed:</span>
-              <span className="font-extrabold text-blue-400">
-                {Object.keys(studyState.completedTopics).length}/75
-              </span>
+            {/* Atmosphere theme selector */}
+            <div className="flex items-center p-1 rounded-xl bg-slate-900/90 border border-slate-800 backdrop-blur-md">
+              <button
+                onClick={() => setAtmosphere('cosmic')}
+                title="Cosmic Midnight Theme"
+                className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-colors cursor-pointer ${
+                  atmosphere === 'cosmic' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Cosmic
+              </button>
+              <button
+                onClick={() => setAtmosphere('aurora')}
+                title="Aurora Emerald Theme"
+                className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-colors cursor-pointer ${
+                  atmosphere === 'aurora' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Aurora
+              </button>
+              <button
+                onClick={() => setAtmosphere('solaris')}
+                title="Solaris Amber Theme"
+                className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-colors cursor-pointer ${
+                  atmosphere === 'solaris' ? 'bg-amber-600 text-white' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Solaris
+              </button>
             </div>
-            <div className="px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800 backdrop-blur-md text-slate-300 flex items-center gap-2">
-              <span className="text-slate-400">Streak:</span>
-              <span className="font-extrabold text-amber-400">
-                {studyState.mcqAttempts.length > 0 || studyState.partBSubmissions.length > 0 ? 'Active 🔥' : 'Start Today'}
-              </span>
-            </div>
+
+            {/* Expand / Zen Canvas Toggle */}
+            <button
+              onClick={() => setIsZenExpanded(!isZenExpanded)}
+              title={isZenExpanded ? 'Restore Compact View' : 'Expand 3D Zen View'}
+              className="p-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition-colors cursor-pointer"
+            >
+              {isZenExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            </button>
           </div>
         </div>
 
         {/* Active Hover Tooltip */}
         {hoveredSubject && (
-          <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-none px-4 py-2 rounded-xl bg-slate-900/90 border border-indigo-500/40 backdrop-blur-md text-white shadow-xl flex items-center gap-3 animate-fadeIn">
+          <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-none px-4 py-2 rounded-xl bg-slate-900/95 border border-indigo-500/40 backdrop-blur-md text-white shadow-2xl flex items-center gap-3 animate-fadeIn">
             <span
-              className="w-3 h-3 rounded-full"
+              className="w-3 h-3 rounded-full shadow"
               style={{ backgroundColor: SUBJECT_SECTOR_CONFIG[hoveredSubject.id].hexColor }}
             />
             <div className="text-xs">
               <span className="font-bold">{hoveredSubject.name}</span>
-              <span className="text-slate-400 ml-2">Progress: {hoveredSubject.progress}%</span>
+              <span className="text-slate-400 ml-2">Curriculum: {hoveredSubject.progress}%</span>
             </div>
             <span className="text-[10px] text-indigo-300 font-semibold">(Click to focus)</span>
           </div>
@@ -709,14 +870,18 @@ export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
 
         {/* WebGL Canvas Viewport */}
         {webGlSupported ? (
-          <div className="w-full h-[400px] sm:h-[480px] lg:h-[520px] cursor-grab active:cursor-grabbing relative">
+          <div
+            className={`w-full transition-all duration-500 cursor-grab active:cursor-grabbing relative ${
+              isZenExpanded ? 'h-[580px] sm:h-[640px]' : 'h-[420px] sm:h-[480px] lg:h-[520px]'
+            }`}
+          >
             <div ref={mountRef} className="w-full h-full" />
             {isLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-slate-950/80 z-30 pointer-events-none">
                 <div className="text-center space-y-3">
                   <div className="w-10 h-10 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin mx-auto" />
                   <p className="text-xs font-semibold text-slate-300 tracking-wide">
-                    Initializing Learning Constellation...
+                    Initializing 3D Zen Constellation...
                   </p>
                 </div>
               </div>
@@ -724,7 +889,7 @@ export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
           </div>
         ) : (
           /* 2D Fallback if WebGL is unavailable */
-          <div className="w-full h-[400px] flex items-center justify-center p-6 text-center text-slate-400">
+          <div className="w-full h-[420px] flex items-center justify-center p-6 text-center text-slate-400">
             <div className="max-w-md space-y-3">
               <Info className="w-8 h-8 text-blue-400 mx-auto" />
               <h3 className="text-base font-bold text-white">Interactive Constellation Map</h3>
@@ -740,24 +905,24 @@ export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
           <div className="flex justify-center mb-1.5">
             <button
               onClick={() => setControlsCollapsed(!controlsCollapsed)}
-              className="px-3 py-1 rounded-full bg-slate-900/80 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-700/60 text-[11px] font-semibold flex items-center gap-1 backdrop-blur-md transition-colors cursor-pointer"
+              className="px-3 py-1 rounded-full bg-slate-900/85 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-700/60 text-[11px] font-semibold flex items-center gap-1 backdrop-blur-md transition-colors cursor-pointer shadow-lg"
             >
               {controlsCollapsed ? (
                 <>
                   <ChevronUp className="w-3.5 h-3.5" />
-                  <span>Show Universe Controls</span>
+                  <span>Show Zen Controls</span>
                 </>
               ) : (
                 <>
                   <ChevronDown className="w-3.5 h-3.5" />
-                  <span>Hide Controls (Zen Mode)</span>
+                  <span>Zen Minimalist Mode</span>
                 </>
               )}
             </button>
           </div>
 
           {!controlsCollapsed && (
-            <div className="p-2 sm:p-2.5 rounded-2xl bg-slate-900/85 border border-slate-700/60 backdrop-blur-xl shadow-2xl flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div className="p-2 sm:p-2.5 rounded-2xl bg-slate-900/90 border border-slate-700/70 backdrop-blur-xl shadow-2xl flex flex-wrap items-center justify-between gap-2 text-xs">
               {/* Subject Focus Pills */}
               <div className="flex items-center gap-1.5 overflow-x-auto py-0.5">
                 {ALL_SUBJECTS.map((sub) => {
@@ -766,10 +931,10 @@ export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
                   return (
                     <button
                       key={sub.id}
-                      onClick={() => setSelectedSubjectId(sub.id)}
+                      onClick={() => handleFocusSubject(sub.id)}
                       className={`px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer text-xs ${
                         isSelected
-                          ? 'bg-white text-slate-950 shadow-md scale-102'
+                          ? 'bg-white text-slate-950 shadow-md scale-102 ring-2 ring-indigo-500/50'
                           : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800 hover:text-white'
                       }`}
                     >
@@ -829,48 +994,49 @@ export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-start gap-4">
             <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-md shrink-0"
-              style={{ backgroundColor: SUBJECT_SECTOR_CONFIG[selectedSubjectId].hexColor }}
+              className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-extrabold text-lg shadow-lg shrink-0"
+              style={{ backgroundColor: currentSubjectMeta.accentColor }}
             >
-              {currentSubjectMeta.code.split('-')[0]}
+              {currentSubjectMeta.id.toUpperCase()}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                   {currentSubjectMeta.code}
                 </span>
+                <span className="text-slate-300 dark:text-slate-700">&bull;</span>
                 <span className="text-xs text-slate-500 dark:text-slate-400">
                   5 Units &bull; 15 Topics &bull; 150 MCQs &bull; 10 Part B
                 </span>
               </div>
-              <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1">
+              <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
                 {currentSubjectMeta.name}
               </h3>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-2xl leading-relaxed">
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">
                 {currentSubjectMeta.tagline}
               </p>
             </div>
           </div>
 
-          {/* Quick Launch Buttons */}
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Quick Subject Action Buttons */}
+          <div className="flex flex-wrap items-center gap-2.5">
             <button
               onClick={() => onNavigate('learn', { subjectId: selectedSubjectId })}
-              className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-md shadow-blue-600/30"
+              className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition-all flex items-center gap-2 cursor-pointer"
             >
               <BookOpen className="w-4 h-4" />
               <span>Study Subject</span>
             </button>
             <button
               onClick={() => onNavigate('mcq', { subjectId: selectedSubjectId })}
-              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-colors flex items-center gap-2 cursor-pointer"
             >
               <CheckSquare className="w-4 h-4 text-blue-500" />
               <span>Take MCQs</span>
             </button>
             <button
               onClick={() => onNavigate('partb', { subjectId: selectedSubjectId })}
-              className="px-4 py-2.5 bg-violet-50 hover:bg-violet-100 dark:bg-violet-900/30 dark:hover:bg-violet-900/50 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-700/50 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs border border-slate-200 dark:border-slate-700 transition-colors flex items-center gap-2 cursor-pointer"
             >
               <FileEdit className="w-4 h-4 text-violet-500" />
               <span>Part B (11-M)</span>
@@ -878,103 +1044,87 @@ export const LearningUniverse3D: React.FC<LearningUniverse3DProps> = ({
           </div>
         </div>
 
-        {/* 4 Diagnostics Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Card 1: Curriculum Progress */}
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 space-y-2">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+        {/* 4 Diagnostic Stat Cards for Selected Subject */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-1">
               Curriculum Progress
             </span>
             <div className="flex items-baseline gap-2">
               <span className="text-2xl font-black text-slate-900 dark:text-white">
                 {completionPercentage}%
               </span>
-              <span className="text-xs text-slate-500 dark:text-slate-400">
+              <span className="text-xs text-slate-400">
                 ({completedTopicsInSubject.length}/15 topics)
               </span>
             </div>
-            <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+            <div className="w-full h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden mt-3">
               <div
-                className="h-full rounded-full transition-all"
+                className="h-full rounded-full transition-all duration-500"
                 style={{
-                  backgroundColor: SUBJECT_SECTOR_CONFIG[selectedSubjectId].hexColor,
                   width: `${completionPercentage}%`,
+                  backgroundColor: currentSubjectMeta.accentColor,
                 }}
               />
             </div>
           </div>
 
-          {/* Card 2: Subject Understanding Score */}
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 space-y-2">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-1">
               Subject Understanding
             </span>
             <div className="flex items-baseline gap-2">
               <span className="text-2xl font-black text-slate-900 dark:text-white">
-                {currentSummary && currentSummary.overallScore > 0
-                  ? `${currentSummary.overallScore}%`
-                  : '—'}
+                {currentSummary.evaluatedTopicsCount > 0 ? `${currentSummary.overallScore}%` : '—'}
               </span>
-              <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                {currentSummary?.category === 'Not Yet Evaluated'
-                  ? 'Pending Practice'
-                  : currentSummary?.category || 'Pending'}
+              <span className="text-xs font-bold text-indigo-500">
+                {currentSummary.evaluatedTopicsCount > 0 ? currentSummary.category : 'Pending Practice'}
               </span>
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Evaluated across {currentSummary?.evaluatedTopicsCount || 0} topics
+            <p className="text-[11px] text-slate-400 mt-2">
+              Evaluated across {currentSummary.evaluatedTopicsCount} topics
             </p>
           </div>
 
-          {/* Card 3: Strongest Topic */}
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 space-y-2">
-            <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
-              <Award className="w-3.5 h-3.5" />
-              <span className="text-xs font-semibold uppercase tracking-wider">Strongest Topic</span>
-            </div>
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-1 flex items-center gap-1.5">
+              <Award className="w-3.5 h-3.5 text-emerald-500" />
+              <span>Strongest Topic</span>
+            </span>
             {strongestTopic ? (
               <div>
-                <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                <span className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
                   {strongestTopic.title}
-                </div>
+                </span>
+                <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1 block">
+                  Score: {topicMetrics[strongestTopic.id]?.compositeScore}% &bull; {topicMetrics[strongestTopic.id]?.category}
+                </span>
+              </div>
+            ) : (
+              <p className="text-xs text-slate-400 italic mt-2">Not enough activity yet</p>
+            )}
+          </div>
+
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-1 flex items-center gap-1.5">
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+              <span>Focus Needed</span>
+            </span>
+            {weakestTopic ? (
+              <div>
+                <span className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
+                  {weakestTopic.title}
+                </span>
                 <button
-                  onClick={() => onSelectTopicToLearn(strongestTopic)}
-                  className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline font-semibold mt-1 inline-flex items-center gap-1"
+                  onClick={() => onSelectTopicToLearn(weakestTopic)}
+                  className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold mt-1 flex items-center gap-1 hover:underline cursor-pointer"
                 >
                   <span>Review Notes</span>
                   <ArrowRight className="w-3 h-3" />
                 </button>
               </div>
             ) : (
-              <p className="text-xs text-slate-500 dark:text-slate-400">Not enough activity yet</p>
-            )}
-          </div>
-
-          {/* Card 4: Topic Needing Improvement */}
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 space-y-2">
-            <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400">
-              <AlertTriangle className="w-3.5 h-3.5" />
-              <span className="text-xs font-semibold uppercase tracking-wider">Focus Needed</span>
-            </div>
-            {weakestTopic ? (
-              <div>
-                <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                  {weakestTopic.title}
-                </div>
-                <button
-                  onClick={() => onSelectTopicToLearn(weakestTopic)}
-                  className="text-[11px] text-amber-600 dark:text-amber-400 hover:underline font-semibold mt-1 inline-flex items-center gap-1"
-                >
-                  <span>Targeted Revision</span>
-                  <ArrowRight className="w-3 h-3" />
-                </button>
-              </div>
-            ) : (
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                {currentSummary && currentSummary.evaluatedTopicsCount > 0
-                  ? 'All evaluated topics strong!'
-                  : 'Not enough activity yet'}
-              </p>
+              <p className="text-xs text-slate-400 italic mt-2">Not enough activity yet</p>
             )}
           </div>
         </div>

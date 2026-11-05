@@ -15,7 +15,7 @@ import {
   Moon,
   Sparkles,
 } from 'lucide-react';
-import { Topic } from '../../types';
+import { Topic, UserProfile } from '../../types';
 import { ALL_TOPICS } from '../../data/curriculum/topics';
 
 export type NavTabId =
@@ -39,6 +39,8 @@ interface NavbarProps {
   isMobileOpen: boolean;
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
+  currentUser: UserProfile;
+  onOpenLoginModal: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -51,6 +53,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   isMobileOpen,
   theme,
   onToggleTheme,
+  currentUser,
+  onOpenLoginModal,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -195,6 +199,32 @@ export const Navbar: React.FC<NavbarProps> = ({
             ) : (
               <Moon className="w-4 h-4 text-indigo-600" />
             )}
+          </button>
+
+          {/* Student Profile / Login Button */}
+          <button
+            onClick={onOpenLoginModal}
+            title={
+              currentUser.isLoggedIn
+                ? `Academic Profile: ${currentUser.name} (${currentUser.rollNumber})`
+                : 'Sign In with Student ID'
+            }
+            className="flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-500/50 bg-slate-100 dark:bg-slate-900 hover:bg-blue-50/50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 transition-all cursor-pointer group"
+          >
+            <div
+              className="w-6 h-6 rounded-lg flex items-center justify-center text-white text-[11px] font-black shadow-xs shrink-0"
+              style={{ backgroundColor: currentUser.avatarColor || '#3b82f6' }}
+            >
+              {currentUser.name.charAt(0).toUpperCase()}
+            </div>
+            <div className="text-left hidden sm:block">
+              <div className="text-[11px] font-bold leading-tight group-hover:text-blue-500 transition-colors truncate max-w-[105px]">
+                {currentUser.name}
+              </div>
+              <div className="text-[9px] text-slate-400 leading-tight truncate max-w-[105px]">
+                {currentUser.isLoggedIn ? currentUser.rollNumber : 'Sign In'}
+              </div>
+            </div>
           </button>
 
           {/* Offline verification badge */}

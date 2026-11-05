@@ -33,6 +33,7 @@ import {
   UserStudyState,
   TopicUnderstandingMetric,
   SubjectUnderstandingSummary,
+  UserProfile,
 } from '../../types';
 import { ALL_SUBJECTS } from '../../data/curriculum/subjects';
 import { ALL_TOPICS, getTopicById } from '../../data/curriculum/topics';
@@ -47,6 +48,8 @@ interface DashboardViewProps {
   overallCategory: string;
   onNavigate: (tab: NavTabId, options?: { subjectId?: SubjectId; topicId?: string }) => void;
   onSelectTopicToLearn: (topic: Topic) => void;
+  currentUser?: UserProfile;
+  onOpenLoginModal?: () => void;
 }
 
 const SUBJECT_ICON_MAP: Record<SubjectId, React.ElementType> = {
@@ -65,6 +68,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   overallCategory,
   onNavigate,
   onSelectTopicToLearn,
+  currentUser,
+  onOpenLoginModal,
 }) => {
   // Format study time (e.g. 1h 45m or 32m)
   const formatTime = (totalSec: number) => {
@@ -160,13 +165,32 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <Flame className="w-3.5 h-3.5 text-amber-400" />
                 <span>{streakDays > 0 ? `${streakDays}-Day Learning Streak` : 'Start Your Streak'}</span>
               </span>
+              {currentUser?.isLoggedIn ? (
+                <button
+                  onClick={onOpenLoginModal}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 transition-colors cursor-pointer"
+                >
+                  <GraduationCap className="w-3.5 h-3.5 text-indigo-300" />
+                  <span>{currentUser.institution} • {currentUser.rollNumber}</span>
+                </button>
+              ) : (
+                <button
+                  onClick={onOpenLoginModal}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-400/30 transition-colors cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
+                  <span>Student Sign In</span>
+                </button>
+              )}
             </div>
 
             <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-white">
-              Welcome back, Student
+              {currentUser?.isLoggedIn ? `Welcome back, ${currentUser.name}` : 'Welcome back, Student'}
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-xl">
-              {completedCount === 0
+              {currentUser?.isLoggedIn
+                ? `${currentUser.department} • ${currentUser.semester}. All your evaluations and active metrics are synced locally.`
+                : completedCount === 0
                 ? 'Begin your semester journey today with 75 comprehensive topics, 750 MCQs, and 11-mark rule-based evaluations.'
                 : `You've completed ${completedCount} of 75 topics. Maintain momentum with targeted practice today.`}
             </p>

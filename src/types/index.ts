@@ -198,6 +198,18 @@ export interface SubjectUnderstandingSummary {
 }
 
 // Storage State
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  rollNumber: string;
+  department: string;
+  institution: string;
+  semester: string;
+  avatarColor: string;
+  isLoggedIn: boolean;
+}
+
 export interface UserStudyState {
   completedTopics: Record<string, { completedAt: string; difficulty: DifficultyLevel }>;
   bookmarkedTopics: string[];
